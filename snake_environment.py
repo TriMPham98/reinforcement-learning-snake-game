@@ -1,11 +1,14 @@
 import numpy as np
 import gymnasium as gym
 from gymnasium import spaces
+import pygame
+import sys
 
 class SnakeEnv(gym.Env):
-    def __init__(self, grid_size=10):
+    def __init__(self, grid_size=10, cell_size=40):
         super(SnakeEnv, self).__init__()
         self.grid_size = grid_size
+        self.cell_size = cell_size
         self.action_space = spaces.Discrete(4)  # 0: up, 1: right, 2: down, 3: left
         self.observation_space = spaces.Box(low=0, high=2, shape=(grid_size, grid_size), dtype=np.uint8)
         
@@ -14,6 +17,12 @@ class SnakeEnv(gym.Env):
         self.direction = 1
         self.steps = 0
         self.max_steps = 100 * grid_size
+
+        # Pygame setup
+        pygame.init()
+        self.screen = pygame.display.set_mode((grid_size * cell_size, grid_size * cell_size))
+        pygame.display.set_caption('Snake Game')
+        self.clock = pygame.time.Clock()
 
     def reset(self):
         self.snake = [(self.grid_size // 2, self.grid_size // 2)]
@@ -61,13 +70,22 @@ class SnakeEnv(gym.Env):
         return obs
 
     def render(self):
-        grid = np.zeros((self.grid_size, self.grid_size), dtype=str)
-        grid[:] = '.'
-        for x, y in self.snake:
-            grid[y, x] = 'O'
-        head_x, head_y = self.snake[0]
-        grid[head_y, head_x] = 'H'
-        food_x, food_y = self.food
-        grid[food_y, food_x] = 'F'
-        print("\n".join([''.join(row) for row in grid]))
-        print(f"Score: {len(self.snake) - 1}")
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+        self.screen.fill((0, 0, 0))  # Fill screen with black
+
+        # Draw snake
+        for segment in self.snake:
+            pygame.draw.rect(self.screen, (0, 255, 0), (segment[0] * self.cell_size, segment[1] * self.cell_size, self.cell_size, self.cell_size))
+
+        # Draw food
+        pygame.draw.rect(self.screen, (255, 0, 0), (self.food[0] * self.cell_size, self.food[1] * self.cell_size, self.cell_size, self.cell_size))
+
+        pygame.display.flip()
+        self.clock.tick(10)  # Control game speed
+
+    def close(self):
+        pygame.quit()
