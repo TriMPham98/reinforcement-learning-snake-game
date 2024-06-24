@@ -46,13 +46,25 @@ class SnakeEnv(gym.Env):
     def _move_snake(self, action):
         dx, dy = [(0, -1), (1, 0), (0, 1), (-1, 0)][action]
         head_x, head_y = self.snake[0]
-        new_head = ((head_x + dx) % self.grid_size, (head_y + dy) % self.grid_size)
+        new_head = (head_x + dx, head_y + dy)
+        
+        # Check if the new head is outside the grid
+        if (new_head[0] < 0 or new_head[0] >= self.grid_size or
+            new_head[1] < 0 or new_head[1] >= self.grid_size):
+            return  # The game will end due to collision in the next step
+        
         if new_head == self.food:
             self.snake = [new_head] + self.snake
         else:
             self.snake = [new_head] + self.snake[:-1]
 
     def _is_collision(self):
+        head_x, head_y = self.snake[0]
+        # Check collision with walls
+        if (head_x < 0 or head_x >= self.grid_size or
+            head_y < 0 or head_y >= self.grid_size):
+            return True
+        # Check collision with self
         return self.snake[0] in self.snake[1:]
 
     def place_food(self):
@@ -104,7 +116,7 @@ class SnakeEnv(gym.Env):
                     elif event.key == pygame.K_LEFT and action != 1:
                         action = 3
 
-            state, reward, done, _, _ = self.step(action)
+            _, reward, done, _, _ = self.step(action)
             total_reward += reward
             self.render()
             print(f"Score: {len(self.snake) - 1}", end='\r')
