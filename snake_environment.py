@@ -70,11 +70,6 @@ class SnakeEnv(gym.Env):
         return obs
 
     def render(self):
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-
         self.screen.fill((0, 0, 0))  # Fill screen with black
 
         # Draw snake
@@ -89,3 +84,30 @@ class SnakeEnv(gym.Env):
 
     def close(self):
         pygame.quit()
+
+    def manual_play(self):
+        done = False
+        total_reward = 0
+        action = 1  # Start moving right
+
+        while not done:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    return total_reward
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_UP and action != 2:
+                        action = 0
+                    elif event.key == pygame.K_RIGHT and action != 3:
+                        action = 1
+                    elif event.key == pygame.K_DOWN and action != 0:
+                        action = 2
+                    elif event.key == pygame.K_LEFT and action != 1:
+                        action = 3
+
+            state, reward, done, _, _ = self.step(action)
+            total_reward += reward
+            self.render()
+            print(f"Score: {len(self.snake) - 1}", end='\r')
+
+        print(f"\nGame Over! Final Score: {len(self.snake) - 1}")
+        return total_reward

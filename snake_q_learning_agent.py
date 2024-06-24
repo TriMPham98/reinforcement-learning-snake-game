@@ -1,5 +1,5 @@
 import numpy as np
-from snake_environment import SnakeEnv
+import matplotlib.pyplot as plt
 
 class QLearningAgent:
     def __init__(self, env, learning_rate=0.1, discount_factor=0.99, epsilon=0.1):
@@ -8,6 +8,7 @@ class QLearningAgent:
         self.gamma = discount_factor
         self.epsilon = epsilon
         self.q_table = {}
+        self.scores = []
 
     def get_q_value(self, state, action):
         return self.q_table.get((state, action), 0.0)
@@ -40,8 +41,20 @@ class QLearningAgent:
                 state = next_state
                 total_reward += reward
 
-            if episode % 1000 == 0:
-                print(f"Episode {episode}, Total Reward: {total_reward}")
+            self.scores.append(total_reward)
+            if episode % 100 == 0:
+                avg_score = np.mean(self.scores[-100:])
+                print(f"Episode {episode}, Average Score (last 100): {avg_score:.2f}")
+
+        self.plot_scores()
+
+    def plot_scores(self):
+        plt.figure(figsize=(10, 6))
+        plt.plot(self.scores)
+        plt.title('Snake Game Learning Progress')
+        plt.xlabel('Episode')
+        plt.ylabel('Score')
+        plt.show()
 
     def play(self, num_games=5):
         for game in range(num_games):
@@ -57,12 +70,5 @@ class QLearningAgent:
                 state = next_state
                 total_reward += reward
                 self.env.render()
-                print(f"Action: {action}, Reward: {reward}")
 
             print(f"Game {game + 1} finished. Total Reward: {total_reward}")
-
-# Usage
-env = SnakeEnv()
-agent = QLearningAgent(env)
-agent.train()
-agent.play()
